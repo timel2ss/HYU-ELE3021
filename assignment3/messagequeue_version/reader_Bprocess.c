@@ -4,9 +4,11 @@
 #include <unistd.h>
 #include <string.h>
 
+#define MSG_SIZE 20
+
 struct msgbuf {
     long msgtype;
-    char mtext[50];
+    char mtext[MSG_SIZE];
 };
 
 int main(void) {

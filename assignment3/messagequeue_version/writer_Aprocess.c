@@ -4,15 +4,17 @@
 #include <unistd.h>
 #include <string.h>
 
+#define MSG_SIZE 20
+
 struct msgbuf {
     long msgtype;
-    char mtext[50];
+    char mtext[MSG_SIZE];
 };
 
 int main(void) {
     key_t key_id;
     struct msgbuf sndbuf;
-    char input[50];
+    char input[MSG_SIZE];
 
     key_id = msgget((key_t)1234, IPC_CREAT | 0666);
     if(key_id == -1) {
