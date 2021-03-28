@@ -19,7 +19,7 @@ int main(void) {
     key_id = msgget((key_t)1234, IPC_CREAT | 0666);
     if(key_id == -1) {
         perror("msgget error: ");
-        return 1;
+        return -1;
     }
 
     while(1) {
@@ -27,7 +27,6 @@ int main(void) {
             perror("msgrcv error: ");
         }
         else {
-            // When user types "quit", this program exits.
             if(!strcmp(rsvbuf.mtext, "quit")) {
                 break;
             }

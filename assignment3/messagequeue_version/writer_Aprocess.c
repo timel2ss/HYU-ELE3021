@@ -19,11 +19,12 @@ int main(void) {
     key_id = msgget((key_t)1234, IPC_CREAT | 0666);
     if(key_id == -1) {
         perror("msgget error: ");
-        return 1;
+        return -1;
     }
 
+    sndbuf.msgtype = 3;
+
     while(1) {
-        sndbuf.msgtype = 3;
         fgets(input, sizeof(input), stdin);
         input[strlen(input) - 1] = '\0';
         strcpy(sndbuf.mtext, input);
@@ -32,7 +33,6 @@ int main(void) {
             perror("msgsnd error: ");
         }
 
-        // When user types "quit", this program exits.
         if(!strcmp(input, "quit")) {
             break;
         }

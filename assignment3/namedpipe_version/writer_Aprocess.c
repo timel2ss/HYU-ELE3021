@@ -14,8 +14,10 @@ int main(void) {
     fd = open(PIPENAME, O_WRONLY);
     if(fd < 0) {
         printf("Open failed\n");
-        return 1;
+        return -1;
     }
+
+    printf("Hello, this is A process. I\'ll give the data to B.\n");
 
     while(1) {
         fgets(msg, sizeof(msg), stdin);
@@ -24,7 +26,7 @@ int main(void) {
         ret = write(fd, msg, sizeof(msg));
         if(ret < 0) {
             printf("Write failed\n");
-            return 1;
+            return -1;
         }
 
         if(!strcmp(msg, "quit")) {
