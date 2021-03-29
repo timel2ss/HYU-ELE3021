@@ -16,6 +16,7 @@ int main(void) {
     struct msgbuf rsvbuf;
     int msgtype = 3;
 
+    // get message queue's id with key 1234
     key_id = msgget((key_t)1234, IPC_CREAT | 0666);
     if(key_id == -1) {
         perror("msgget error: ");
@@ -23,10 +24,12 @@ int main(void) {
     }
 
     while(1) {
+        // receive message from message queue
         if(msgrcv(key_id, (void*)&rsvbuf, sizeof(struct msgbuf), msgtype, 0) == -1) {
             perror("msgrcv error: ");
         }
         else {
+            // if message is "quit", then escape loop
             if(!strcmp(rsvbuf.mtext, "quit")) {
                 break;
             }

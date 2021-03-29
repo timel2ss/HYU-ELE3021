@@ -15,13 +15,15 @@ int main(void) {
     int shmid;
     void* shmaddr;
     int ret, flag;
-
+    
+    // make a shared memory
     shmid = shmget((key_t)1234, 1024, IPC_CREAT | 0666);
     if(shmid == -1) {
         perror("Shared memory access is failed\n");
         return -1;
     }
 
+    // attach the shared memory
     shmaddr = shmat(shmid, (void*)0, 0);
     if(shmaddr == (char*)-1) {
         perror("Attach failed\n");
@@ -38,12 +40,14 @@ int main(void) {
 
             data->flag = 1;
 
+            // if msg is "quit", then escape loop
             if(!strcmp(data->msg, "quit")) {
                 break;
             }
         }
     }
 
+    // detach the shared memory
     ret = shmdt(shmaddr);
     if(ret == -1) {
         perror("Detach failed\n");
