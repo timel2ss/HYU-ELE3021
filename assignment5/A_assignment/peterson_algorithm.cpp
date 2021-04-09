@@ -15,12 +15,12 @@ atomic_int flag0(0), flag1(0);
 void lock(int self) {
     if(self) {
         flag1 = 1;
-        turn = 1 - self;
+        turn = 0;
         while(flag0 == 1 && turn == 0);
     }
     else {
         flag0 = 1;
-        turn = 1 - self;
+        turn = 1;
         while(flag1 == 1 && turn == 1);
     }
 }
