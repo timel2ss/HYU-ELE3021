@@ -14,9 +14,11 @@ struct smStruct {
     int critical_section_variable;
 };
 
+// peterson algorithm
 void lock(struct smStruct* smstruct, int order) {
     smstruct->flag[order] = 1;
     smstruct->turn = 1 - order;
+    // when an other process is using critical_section_variable. this process has busy waiting status
     while(smstruct->flag[1 - order] == 1 && smstruct->turn == 1 - order);
 }
 
@@ -32,12 +34,14 @@ int main(void) {
     void *shmaddr;
     int ret;
 
+    // get shared memory id
     shmid = shmget((key_t)1234, 1024, IPC_CREAT|0666);
     if(shmid == -1) {
         perror("shared memory access is failed\n");
         return -1;
     }
 
+    // attach the shared memory
     shmaddr = shmat(shmid, (void*)0, 0);
     if(shmaddr == (char*)-1) {
         perror("failed attach address\n");
@@ -46,6 +50,7 @@ int main(void) {
 
     smstruct = (struct smStruct*)shmaddr;
 
+    // set process order
     int Myorder = 0;
     if(smstruct->processidassign != 0) {
         Myorder = 1;
@@ -57,6 +62,7 @@ int main(void) {
    
     int i;
     int localcount = 0;
+    // increase localcount and critical_section_variable
     for(i = 0; i < COUNTING_NUMBER; i++) {
         localcount++;
         lock(smstruct, Myorder);
@@ -66,6 +72,7 @@ int main(void) {
 
     printf("child finish! local count = %d\n", localcount);
 
+    // detach the shared memory
     ret = shmdt(shmaddr);
     if(ret == -1) {
         perror("detach failed\n");

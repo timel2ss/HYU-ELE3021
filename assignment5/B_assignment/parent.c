@@ -22,12 +22,14 @@ int main(void) {
     void *shmaddr;
     int ret;
 
+    // get shared memory id
     shmid = shmget((key_t)1234, 1024, IPC_CREAT|0666);
     if(shmid == -1) {
         perror("Shared memory access is failed\n");
         return -1;
     }
 
+    // attach the shared memory
     shmaddr = shmat(shmid, (void*)0, 0);
     if(shmaddr == (char*)-1) {
         perror("failed attach address\n");
@@ -44,6 +46,7 @@ int main(void) {
     pid_t pid1, pid2;
     int status;
 
+    // create child process and execute "child" program
     if((pid1 = fork()) == 0) {
         execl("./child", NULL);
     }
@@ -51,17 +54,20 @@ int main(void) {
         execl("./child", NULL);
     }
 
+    // wait for the end of child processes
     waitpid(pid1, &status, 0);
     waitpid(pid2, &status, 0);
 
     printf("Actual Count: %d | Expected Count: %d\n", smstruct->critical_section_variable, COUNTING_NUMBER * 2);
 
+    // detach the shared memory
     ret = shmdt(shmaddr);
     if(ret == -1) {
         perror("detach failed\n");
         return -1;
     }
 
+    // remove the shared memory
     ret = shmctl(shmid, IPC_RMID, 0);
     if(ret == -1) {
         perror("remove failed\n");

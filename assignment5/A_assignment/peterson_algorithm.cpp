@@ -12,15 +12,20 @@ int critical_section_variable = 0;
 atomic_int turn(0);
 atomic_int flag0(0), flag1(0);
 
+// peterson algorithm
 void lock(int self) {
     if(self) {
         flag1 = 1;
         turn = 0;
+
+        // When an other thread is using critical section variable, this process has busy waiting status. 
         while(flag0 == 1 && turn == 0);
     }
     else {
         flag0 = 1;
         turn = 1;
+
+        // When an other thread is using critical section variable, this process has busy waiting status. 
         while(flag1 == 1 && turn == 1);
     }
 }
@@ -50,9 +55,11 @@ int main(void) {
 
     int parameter[2] = {0, 1};
 
+    // create 2 threads and run "func" function with parameter[i]
     pthread_create(&p1, NULL, func, (void*)&parameter[0]);
     pthread_create(&p2, NULL, func, (void*)&parameter[1]);
 
+    // wait for the end of threads
     pthread_join(p1, NULL);
     pthread_join(p2, NULL);
 
