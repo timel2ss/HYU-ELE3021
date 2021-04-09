@@ -18,14 +18,14 @@ void lock(int self) {
         flag1 = 1;
         turn = 0;
 
-        // When an other thread is using critical section variable, this process has busy waiting status. 
+        // When an other thread is using critical section variable, this thread has busy waiting status. 
         while(flag0 == 1 && turn == 0);
     }
     else {
         flag0 = 1;
         turn = 1;
 
-        // When an other thread is using critical section variable, this process has busy waiting status. 
+        // When an other thread is using critical section variable, this thread has busy waiting status. 
         while(flag1 == 1 && turn == 1);
     }
 }

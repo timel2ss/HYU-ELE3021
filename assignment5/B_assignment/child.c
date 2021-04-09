@@ -18,7 +18,7 @@ struct smStruct {
 void lock(struct smStruct* smstruct, int order) {
     smstruct->flag[order] = 1;
     smstruct->turn = 1 - order;
-    // when an other process is using critical_section_variable. this process has busy waiting status
+    // when an other process is using critical section variable, this process has busy waiting status.
     while(smstruct->flag[1 - order] == 1 && smstruct->turn == 1 - order);
 }
 
