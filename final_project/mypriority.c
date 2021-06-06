@@ -43,29 +43,29 @@ static void update_curr_myprio(struct rq *rq){
         struct sched_myprio_entity* curr_entity = &curr_p->myprio;
         struct myprio_rq* myprio_rq = &rq->myprio;
 
-        /*
-        If highest priority task is not curr, change its position in rq to curr's position
-        Set old curr's wait time, Set old curr's priority to originnal priority
-        Ask rescheduling
-        */
         unsigned int highest_prio = 0;
         struct sched_myprio_entity* highest_prio_entity = NULL;
         struct task_struct* highest_prio_task = NULL;
 
         // find the highest priority task in the myprio rq
         struct sched_myprio_entity* iter = NULL;
-        list_for_each_entry(iter, myprio_rq->queue, run_list) {
+        list_for_each_entry(iter, &myprio_rq->queue, run_list) {
                 if(highest_prio < iter->priority) {
                         highest_prio = iter->priority;
-                        hightest_prio_entity = iter;
+                        highest_prio_entity = iter;
                 }
         }
         highest_prio_task = container_of(highest_prio_entity, struct task_struct, myprio);
 
+        // if the task has higher priority than curr, change its position
         if(curr_entity->priority < highest_prio_entity->priority) {
-                printk(KERN_INFO "***[MYPRIO] update_curr_myprio         curr pid=%d curr priority=%d next pid=%d next priority=%d \n", curr_p->pid, curr_entity->priority, highest_prio_task->pid, highest_prio_entity->priority);
+                printk(KERN_INFO "***[MYPRIO] update_curr: curr_pid=%d,curr_priority=%d,next_pid=%d,next_priority=%d \n", curr_p->pid, curr_entity->priority, highest_prio_task->pid, highest_prio_entity->priority);
+
+                // move the position to front
                 list_del(&highest_prio_entity->run_list);
-                list_add(&highest_prio_entity->run_list, myprio_rq->run_list);
+                list_add(&highest_prio_entity->run_list, &myprio_rq->queue);
+
+                // reschedule
                 resched_curr(rq);
         }
 
@@ -75,25 +75,24 @@ static void enqueue_task_myprio(struct rq *rq, struct task_struct *p, int flags)
         struct myprio_rq* myprio_rq = &rq->myprio;
         struct sched_myprio_entity* myprio_entity = &p->myprio;
 
-        // priority inject
-        // myprio_entity->priority = p->mypriority
+        // priority is set in the application (newclass4)
+
+        // enqueue
         list_add_tail(&myprio_entity->run_list, &myprio_rq->queue);
         myprio_rq->nr_running++;
 
-        printk(KERN_INFO "***[MYPRIO] enqueue: success cpu=%d,nr_running=%d,p->state=%ld,p->pid=%d \n", cpu_of(rq), myprio_rq->nr_running, p->state, p->pid);
+        printk(KERN_INFO "***[MYPRIO] enqueue: success cpu=%d,nr_running=%d,p->state=%ld,p->pid=%d,myprio=%d\n", cpu_of(rq), myprio_rq->nr_running, p->state, p->pid, myprio_entity->priority);
 }
 static void dequeue_task_myprio(struct rq *rq, struct task_struct *p, int flags)
 {
         struct myprio_rq* myprio_rq = &rq->myprio;
         struct sched_myprio_entity* myprio_entity = &p->myprio;
 
-
+        // dequeue
         if(myprio_rq->nr_running > 0) {
-                printk(KERN_INFO "***[MYPRIO] dequeue: start \n");
                 list_del_init(&myprio_entity->run_list);
                 myprio_rq->nr_running--;
                 printk(KERN_INFO "***[MYPRIO] dequeue: the dequeued task is curr, set TIF_NEED_RESCHED flag cpu=%d,p->state=%ld,p->pid=%d,curr->pid=%d \n", cpu_of(rq), p->state, p->pid, rq->curr->pid);
-                printk(KERN_INFO "***[MYPRIO] dequeue: end \n");
         }
 }
 void check_preempt_curr_myprio(struct rq *rq, struct task_struct *p, int flags) {
@@ -113,7 +112,7 @@ struct task_struct *pick_next_task_myprio(struct rq *rq, struct task_struct *pre
         next_entity = list_entry(queue->next, struct sched_myprio_entity, run_list);
         next_p = container_of(next_entity, struct task_struct, myprio);
 
-        printk(KERN_INFO "***[MYPRIO] pick_next_task: cpu=%d,prev->pid=%d, next_p->pid=%d,nr_running=%d \n", cpu_of(rq), prev->pid, next_p->pid, myprio_rq->nr_running);
+        printk(KERN_INFO "***[MYPRIO] pick_next_task: cpu=%d,prev->pid=%d, next_p->pid=%d,nr_running=%d,myprio=%d \n", cpu_of(rq), prev->pid, next_p->pid, myprio_rq->nr_running, next_entity->priority);
 
         return next_p;
 }
