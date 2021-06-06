@@ -8,8 +8,8 @@
 
 #define SCHED_MYSCHED   7
 #define SCHED_MYRR      8
-#define SCHED_MYSTRD    9
-#define NR_TASKS        3
+#define SCHED_MYPRIO    9
+#define NR_TASKS        10
 
 #ifdef __x86_64__
 #define __NR_sched_setattr              314
@@ -31,8 +31,8 @@ struct sched_attr {
         /* SCHED_FIFO, SCHED_RR */
         __u32 sched_priority;
 
-        /* SCHED_MYSTRD */
-        __u32 sched_ticket;
+        /* SCHED_MYPRIO */
+        __u32 sched_myprio;
 
         /* SCHED_DEADLINE */
         __u64 sched_runtime;
@@ -79,7 +79,7 @@ int main(int argc, char** argv)
         }
 
         if (argc != 2) {
-                printf("***[NEWCLASS] Need argument: qos_fork {f | n}\n");
+                printf("***[NEWCLASS] Need argument: qos_fork {f | n | p}\n");
                 exit(1);
         }
 
@@ -109,7 +109,7 @@ int main(int argc, char** argv)
 
                                 attr.sched_nice = 0;            // for SCHED_NORMAL and SCHED_BATCH
                                 attr.sched_priority = 0;        // for SCHED_FIFO and SCHED_RR
-                                attr.sched_ticket = 0;
+                                attr.sched_myprio = 3;
 
                                 ret = sched_setattr(my_pid, &attr, flags);
                                 if (ret != 0) {
@@ -131,7 +131,7 @@ int main(int argc, char** argv)
 
                                 attr.sched_nice = 0;            // for SCHED_NORMAL and SCHED_BATCH
                                 attr.sched_priority = 0;        // for SCHED_FIFO and SCHED_RR
-                                attr.sched_ticket = 0;
+                                attr.sched_myprio = 3;
 
                                 ret = sched_setattr(my_pid, &attr, flags);
                                 if (ret != 0) {
@@ -139,12 +139,12 @@ int main(int argc, char** argv)
                                         exit(1);
                                 }
                         }
-                        else if(c == 's')
+                        else if(c == 'p')
                         {
-                                printf("***[NEWCLASS] Select mystrd scheduling class \n");
+                                printf("***[NEWCLASS] Select myprio scheduling class \n");
                                 /* set attributes for SCHED_DEADLINE */
                                 attr.size = sizeof(attr);
-                                attr.sched_policy = SCHED_MYSTRD;
+                                attr.sched_policy = SCHED_MYPRIO;
                                 attr.sched_flags = 0;
 
                                 attr.sched_period = 0;
@@ -153,13 +153,14 @@ int main(int argc, char** argv)
 
                                 attr.sched_nice = 0;            // for SCHED_NORMAL and SCHED_BATCH
                                 attr.sched_priority = 0;        // for SCHED_FIFO and SCHED_RR
-                                attr.sched_ticket = tickets[i];
+                                attr.sched_myprio = (i % 5) + 1;
 
                                 ret = sched_setattr(my_pid, &attr, flags);
                                 if (ret != 0) {
                                         perror("sched_setattr");
                                         exit(1);
                                 }
+                                printf("pid = %d myprio = %d \n", my_pid, attr.sched_myprio);
                         }
                         else if (c == 'f')
                                 printf("***[NEWCLASS] Select CFS class \n");
@@ -178,7 +179,7 @@ int main(int argc, char** argv)
                                 printf("cpuset at [1st] cpu in child process(pid=%d) is succeed\n", my_pid);
                         }
 
-                        pause();
+                        sleep(1);
 
                         /* child process work */
                         int j=0;
@@ -186,7 +187,7 @@ int main(int argc, char** argv)
 
                                 int i=0;
                                 int result = 0;
-                                for(i=0; i<10000000; i++)
+                                for(i=0; i<20000000; i++)
                                 {
                                         result+=1;
                                 }
