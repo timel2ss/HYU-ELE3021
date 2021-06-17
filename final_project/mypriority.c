@@ -13,6 +13,8 @@ static void check_preempt_curr_myprio(struct rq *rq, struct task_struct *p,int f
 struct task_struct *pick_next_task_myprio(struct rq *rq, struct task_struct *prev);
 static void prio_changed_myprio(struct rq *rq, struct task_struct *p, int oldprio);
 
+#define MAX_AGE 100
+
 const struct sched_class myprio_sched_class={
         .next=&fair_sched_class,
         .enqueue_task=&enqueue_task_myprio,
@@ -47,9 +49,22 @@ static void update_curr_myprio(struct rq *rq){
         struct sched_myprio_entity* highest_prio_entity = NULL;
         struct task_struct* highest_prio_task = NULL;
 
-        // find the highest priority task in the myprio rq
         struct sched_myprio_entity* iter = NULL;
+        struct task_struct* iter_task = NULL;
+
         list_for_each_entry(iter, &myprio_rq->queue, run_list) {
+                // increase entity's age value
+                if(iter != curr_entity) {
+                        iter->age++;
+                }
+                // if it exceed MAX_AGE, then increase its priority value
+                if(iter->age > MAX_AGE) {
+                        iter->age = 0;
+                        iter->priority++;
+                        iter_task = container_of(iter, struct task_struct, myprio);
+                        printk(KERN_INFO "***[MYPRIO] update_curr priority_increment: pid=%d,prev_priority=%d,curr_priority=%d \n", iter_task->pid, iter->priority-1, iter->priority);
+                }
+                // find the highest priority task in the myprio rq
                 if(highest_prio < iter->priority) {
                         highest_prio = iter->priority;
                         highest_prio_entity = iter;
@@ -59,7 +74,7 @@ static void update_curr_myprio(struct rq *rq){
 
         // if the task has higher priority than curr, change its position
         if(curr_entity->priority < highest_prio_entity->priority) {
-                printk(KERN_INFO "***[MYPRIO] update_curr: curr_pid=%d,curr_priority=%d,next_pid=%d,next_priority=%d \n", curr_p->pid, curr_entity->priority, highest_prio_task->pid, highest_prio_entity->priority);
+                printk(KERN_INFO "***[MYPRIO] update_curr change_position: curr_pid=%d,curr_priority=%d,next_pid=%d,next_priority=%d \n", curr_p->pid, curr_entity->priority, highest_prio_task->pid, highest_prio_entity->priority);
 
                 // move the position to front
                 list_del(&highest_prio_entity->run_list);
@@ -76,8 +91,10 @@ static void enqueue_task_myprio(struct rq *rq, struct task_struct *p, int flags)
         struct sched_myprio_entity* myprio_entity = &p->myprio;
 
         // priority is set in the application (newclass4)
+        // initialize entity's age value
+        myprio_entity->age = 0;
 
-        // enqueue
+        // enqueue myprio entity to rq
         list_add_tail(&myprio_entity->run_list, &myprio_rq->queue);
         myprio_rq->nr_running++;
 
@@ -88,7 +105,7 @@ static void dequeue_task_myprio(struct rq *rq, struct task_struct *p, int flags)
         struct myprio_rq* myprio_rq = &rq->myprio;
         struct sched_myprio_entity* myprio_entity = &p->myprio;
 
-        // dequeue
+        // dequeue myprio entity from rq
         if(myprio_rq->nr_running > 0) {
                 list_del_init(&myprio_entity->run_list);
                 myprio_rq->nr_running--;
