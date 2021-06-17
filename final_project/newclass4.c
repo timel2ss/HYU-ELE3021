@@ -153,14 +153,13 @@ int main(int argc, char** argv)
 
                                 attr.sched_nice = 0;            // for SCHED_NORMAL and SCHED_BATCH
                                 attr.sched_priority = 0;        // for SCHED_FIFO and SCHED_RR
-                                attr.sched_myprio = (i % 5) + 1;
+                                attr.sched_myprio = (i % 5) + 1;// for SCHED_MYPRIO, set myprio between 1 ~ 5 at start
 
                                 ret = sched_setattr(my_pid, &attr, flags);
                                 if (ret != 0) {
                                         perror("sched_setattr");
                                         exit(1);
                                 }
-                                printf("pid = %d myprio = %d \n", my_pid, attr.sched_myprio);
                         }
                         else if (c == 'f')
                                 printf("***[NEWCLASS] Select CFS class \n");
