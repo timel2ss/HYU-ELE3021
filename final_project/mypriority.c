@@ -122,10 +122,12 @@ struct task_struct *pick_next_task_myprio(struct rq *rq, struct task_struct *pre
         struct list_head* queue = &myprio_rq->queue;
         struct sched_myprio_entity* next_entity = NULL;
 
+        // if rq is empty, do nothing
         if(rq->myprio.nr_running == 0) {
                 return NULL;
         }
 
+        // pick next task with entity of queue->next position
         next_entity = list_entry(queue->next, struct sched_myprio_entity, run_list);
         next_p = container_of(next_entity, struct task_struct, myprio);
 
